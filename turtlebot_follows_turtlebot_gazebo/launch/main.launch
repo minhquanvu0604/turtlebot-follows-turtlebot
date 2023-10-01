@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="gui" default="true" />
+  <arg name="model" default="$(env TURTLEBOT3_MODEL)" doc="model type [burger, waffle, waffle_pi]"/>
+
+  <arg name="laser_visual" default="false"/>
+  <arg name="camera_visual" default="true"/>
+  <arg name="imu_visual" default="false" />
+
+  <param name="robot_description" command="$(find xacro)/xacro --inorder $(find turtlebot_follows_turtlebot_gazebo)/launch/turtlebot3_$(arg model).urdf.xacro 
+    laser_visual:=$(arg laser_visual) 
+    camera_visual:=$(arg camera_visual) 
+    imu_visual:=$(arg imu_visual) 
+    "/>
+
+  <include file="$(find turtlebot_follows_turtlebot_gazebo)/launch/named_turtlebot.launch" >
+    <arg name="robot_name" value="follower" />
+    <arg name="x_pos" value="0" />
+    <arg name="y_pos" value="0" />
+    <arg name="z_pos" value="0" />
+    <arg name="tf_freq" value="50" />
+  </include>
+
+  <include file="$(find turtlebot_follows_turtlebot_gazebo)/launch/named_turtlebot.launch" >
+    <arg name="robot_name" value="leader" />
+    <arg name="x_pos" value="5" />
+    <arg name="y_pos" value="0" />
+    <arg name="z_pos" value="0" />
+    <arg name="tf_freq" value="50" />
+  </include>   
+
+  <include file="$(find gazebo_ros)/launch/empty_world.launch" >
+      <arg name="paused" value="false"/>
+      <arg name="use_sim_time" value="true"/>
+      <arg name="gui" value="$(arg gui)"/>
+      <arg name="debug" value="false"/>
+  </include>
+
+</launch>
