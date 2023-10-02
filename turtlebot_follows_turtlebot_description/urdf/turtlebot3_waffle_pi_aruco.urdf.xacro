@@ -14,10 +14,10 @@
   <link name="base_link">
     <visual>
       <origin xyz="-0.064 0 0.0" rpy="0 0 0"/>
-      <geometry>
-        <mesh filename="package://turtlebot_follows_turtlebot_description/meshes/3x3_floor_marker.dae" scale="1 1 1"/>
+      <geometry>  
+        <mesh filename="package://turtlebot3_description/meshes/bases/waffle_pi_base.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-      <!-- <material name="light_black"/> -->
+      <material name="light_black"/>
     </visual>
 
     <collision>
@@ -34,6 +34,23 @@
                iyy="8.6195418e-03" iyz="-3.5422299e-06"
                izz="1.4612727e-02" />
     </inertial>
+  </link>
+
+  <!-- ArUco -->
+  <joint name="aruco_joint" type="fixed">
+      <parent link="base_link"/>
+      <child link="aruco_link" />
+      <origin xyz="-0.2 0 0.08" rpy="0 -1.57 0"/>
+  </joint>
+
+  <link name="aruco_link">
+      <visual>
+          <origin xyz="0 0 0" rpy="0 0 0"/>
+          <geometry>
+              <mesh filename="package://turtlebot_follows_turtlebot_description/meshes/aruco_board.dae" scale="0.15 0.15 0.15"/>
+          </geometry>
+          <material name="light_black"/>
+      </visual>
   </link>
 
   <joint name="wheel_left_joint" type="continuous">

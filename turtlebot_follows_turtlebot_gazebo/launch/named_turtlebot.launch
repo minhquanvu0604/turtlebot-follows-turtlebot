@@ -2,20 +2,33 @@
 
 <launch>
   <arg name="robot_name" default="follower" />
-  <arg name="model" default="$(env TURTLEBOT3_MODEL)" doc="model type [burger, waffle, waffle_pi]"/>
+  <arg name="model_xacro" default="$(find xacro)/xacro $(find turtlebot3_description)/urdf/turtlebot3_waffle_pi.urdf.xacro" doc="model type [burger, waffle, waffle_pi]"/>
   <arg name="x_pos" default="-2.0"/>
   <arg name="y_pos" default="-0.5"/>
   <arg name="z_pos" default="0.0"/>
   <arg name="tf_freq" default="50" />
 
+  <arg name="laser_visual" default="false"/>
+  <arg name="camera_visual" default="false"/>
+  <arg name="imu_visual" default="false" />
+
 
   <group ns="$(arg robot_name)">
-    <node pkg="gazebo_ros" type="spawn_model" name="spawn_urdf"  args="-urdf -model turtlebot3_$(arg model)_$(arg robot_name) -x $(arg x_pos) -y $(arg y_pos) -z $(arg z_pos) -param robot_description" />
+
+    <param name="robot_description" command="$(arg model_xacro) 
+      laser_visual:=$(arg laser_visual) 
+      camera_visual:=$(arg camera_visual) 
+      imu_visual:=$(arg imu_visual) 
+    "/>
+
+    <node pkg="gazebo_ros" type="spawn_model" name="spawn_urdf"  args="-urdf -model turtlebot3_waffle_pi_$(arg robot_name) -x $(arg x_pos) -y $(arg y_pos) -z $(arg z_pos) -param robot_description" />
+    
     <node pkg="robot_state_publisher" type="robot_state_publisher" name="state_publisher">
       <param name="publish_frequency" type="double" value="$(arg tf_freq)" />
       <param name="tf_prefix" value="$(arg robot_name)" />
     </node>
   </group>
+
 </launch>
 
 

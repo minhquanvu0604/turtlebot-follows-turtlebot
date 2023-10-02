@@ -4,30 +4,10 @@
   <arg name="model" default="$(env TURTLEBOT3_MODEL)" doc="model type [burger, waffle, waffle_pi]"/>
 
   <arg name="laser_visual" default="false"/>
-  <arg name="camera_visual" default="true"/>
+  <arg name="camera_visual" default="false"/>
   <arg name="imu_visual" default="false" />
+  <arg name="open_rviz" default="true" />
 
-  <param name="robot_description" command="$(find xacro)/xacro --inorder $(find turtlebot_follows_turtlebot_gazebo)/launch/turtlebot3_$(arg model).urdf.xacro 
-    laser_visual:=$(arg laser_visual) 
-    camera_visual:=$(arg camera_visual) 
-    imu_visual:=$(arg imu_visual) 
-    "/>
-
-  <include file="$(find turtlebot_follows_turtlebot_gazebo)/launch/named_turtlebot.launch" >
-    <arg name="robot_name" value="follower" />
-    <arg name="x_pos" value="0" />
-    <arg name="y_pos" value="0" />
-    <arg name="z_pos" value="0" />
-    <arg name="tf_freq" value="50" />
-  </include>
-
-  <include file="$(find turtlebot_follows_turtlebot_gazebo)/launch/named_turtlebot.launch" >
-    <arg name="robot_name" value="leader" />
-    <arg name="x_pos" value="5" />
-    <arg name="y_pos" value="0" />
-    <arg name="z_pos" value="0" />
-    <arg name="tf_freq" value="50" />
-  </include>   
 
   <include file="$(find gazebo_ros)/launch/empty_world.launch" >
       <arg name="paused" value="false"/>
@@ -35,5 +15,39 @@
       <arg name="gui" value="$(arg gui)"/>
       <arg name="debug" value="false"/>
   </include>
+
+  <!-- FOLLOWER -->
+  <include file="$(find turtlebot_follows_turtlebot_gazebo)/launch/named_turtlebot.launch" >
+    <arg name="robot_name" value="follower" />
+    <arg name="x_pos" value="0" />
+    <arg name="y_pos" value="0" />
+    <arg name="z_pos" value="0" />
+    <arg name="tf_freq" value="50" />
+
+    <arg name="laser_visual" value="$(arg laser_visual)"/>
+    <arg name="camera_visual" value="$(arg camera_visual)"/>
+    <arg name="imu_visual" value="$(arg imu_visual)" />
+  </include>
+
+
+  <!-- LEADER -->
+  <include file="$(find turtlebot_follows_turtlebot_gazebo)/launch/named_turtlebot.launch" >
+    <arg name="robot_name" value="leader" />
+    <arg name="model_xacro" default="$(find xacro)/xacro $(find turtlebot_follows_turtlebot_description)/urdf/turtlebot3_waffle_pi_aruco.urdf.xacro"/>
+    <arg name="x_pos" value="2" />
+    <arg name="y_pos" value="0" />
+    <arg name="z_pos" value="0" />
+    <arg name="tf_freq" value="50" />
+
+    <arg name="laser_visual" value="$(arg laser_visual)"/>
+    <arg name="camera_visual" value="$(arg camera_visual)"/>
+    <arg name="imu_visual" value="$(arg imu_visual)" />
+  </include>
+
+  <!-- rviz -->
+  <group if="$(arg open_rviz)"> 
+    <node pkg="rviz" type="rviz" name="rviz" required="true"
+          args="-d $(find turtlebot_follows_turtlebot_description)/rviz/two_turtlebot.rviz"/>
+  </group>
 
 </launch>
