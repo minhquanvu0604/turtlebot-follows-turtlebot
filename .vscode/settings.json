@@ -1,0 +1,14 @@
+{
+    "python.autoComplete.extraPaths": [
+        "/home/benjamin/sensor_ws/devel/lib/python3/dist-packages",
+        "/home/benjamin/catkin_ws/devel/lib/python3/dist-packages",
+        "/home/benjamin/sawyer_ws/devel/lib/python3/dist-packages",
+        "/opt/ros/noetic/lib/python3/dist-packages"
+    ],
+    "python.analysis.extraPaths": [
+        "/home/benjamin/sensor_ws/devel/lib/python3/dist-packages",
+        "/home/benjamin/catkin_ws/devel/lib/python3/dist-packages",
+        "/home/benjamin/sawyer_ws/devel/lib/python3/dist-packages",
+        "/opt/ros/noetic/lib/python3/dist-packages"
+    ]
+}
