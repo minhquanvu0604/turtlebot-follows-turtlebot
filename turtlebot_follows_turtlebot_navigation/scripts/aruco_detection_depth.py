@@ -38,11 +38,11 @@ class ArUcoDepthDetector:
             return
 
         gray = cv2.cvtColor(cv_image, cv2.COLOR_BGR2GRAY)
-        # aruco_dict = aruco.getPredefinedDictionary(aruco.DICT_6X6_250)
-        # parameters = aruco.DetectorParameters()
+        aruco_dict = aruco.getPredefinedDictionary(aruco.DICT_4X4_250)
+        parameters = aruco.DetectorParameters()
 
-        aruco_dict = aruco.Dictionary_get(aruco.DICT_6X6_250)
-        parameters = aruco.DetectorParameters_create()
+        # aruco_dict = aruco.Dictionary_get(aruco.DICT_4X4_250)
+        # parameters = aruco.DetectorParameters_create()
 
         corners, ids, _ = aruco.detectMarkers(gray, aruco_dict, parameters=parameters)
 
