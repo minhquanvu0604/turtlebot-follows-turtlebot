@@ -5,19 +5,27 @@
 #include <opencv2/opencv.hpp>
 #include <opencv2/aruco.hpp>
 #include <sensor_msgs/image_encodings.h>
+#include <geometry_msgs/Twist.h>
+
+#include "simple_controller.hpp"
+
 
 class ArucoDetectorNode {
 public:
     ArucoDetectorNode() 
         : it_(nh_), 
-        markerLength_(0.05) { // default value
+        markerLength_(0.05), 
+        controller_(DESIRED_DISTANCE, MAX_LINEAR_SPEED, MAX_ANGULAR_SPEED){
+
         
         // Subscribe to the raw image topic
         image_sub_ = it_.subscribe("/follower/camera/rgb/image_raw", 1, &ArucoDetectorNode::imageCallback, this);
         
         // Advertise the topic where the images with detected ArUco markers will be published
         image_pub_ = it_.advertise("camera/image_aruco_detected", 1);
+        cmd_vel_pub_ = nh_.advertise<geometry_msgs::Twist>("follower/cmd_vel", 10);
 
+        
         // Read camera parameters from tutorial_camera_params.yml
         std::string packagePath = ros::package::getPath("turtlebot_follows_turtlebot_navigation");
         std::string cameraParamsRelativePath = "/config/turtlebot_gazebo_camera_params.yml"; // adjust path   
@@ -72,24 +80,66 @@ public:
             std::vector<std::vector<cv::Point2f>> corners;
 
             cv::aruco::detectMarkers(image, dictionary_, corners, ids, detectorParams_);
-
+            
 
             // If at least one marker detected
-            if (ids.size() > 0) {
+            if (ids.size() == 1 && ids[0] == 24) {
 
                 ROS_INFO("1");
 
-                cv::aruco::drawDetectedMarkers(imageCopy, corners, ids);
+                cv::aruco::drawDetectedMarkers(imageCopy, corners);
                 
                 int nMarkers = corners.size();
                 std::vector<cv::Vec3d> rvecs(nMarkers), tvecs(nMarkers);
                 
-                
-
                 // Calculate pose for each marker
                 for (int i = 0; i < nMarkers; i++) {
                     cv::solvePnP(objPoints_, corners.at(i), cameraMatrix_, distCoeffs_, rvecs.at(i), tvecs.at(i));
-                    ROS_INFO_STREAM("rvecs: " << rvecs.at(i));
+                    // ROS_INFO_STREAM("rvecs: " << rvecs.at(i));
+                    double distance_to_marker = tvecs.at(i)[2]; // Extracting the Z value of the translation vector
+                    ROS_INFO_STREAM("DISTANCE: " << distance_to_marker);
+                    
+                    // Convert the distance to a string for displaying
+                    std::stringstream ss;
+                    ss << std::fixed << std::setprecision(2) << distance_to_marker << " m"; // Display distance with 2 decimal points
+
+                    // Display the distance on the image
+                    cv::Point text_position(10, 30);
+                    cv::putText(imageCopy, ss.str(), text_position, cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 255, 0), 2, cv::LINE_AA);
+
+                    // Control the robot                    
+                    // After detecting the markers and before computing velocity commands:
+                    cv::Point2f marker_center = (corners[i][0] + corners[i][2]) * 0.5; 
+                    cv::Point2f image_center(image.cols / 2, image.rows / 2);
+
+                    // Calculate displacement in pixels
+                    float displacement_x = marker_center.x - image_center.x;
+                    ROS_INFO_STREAM("displacement_x: " << displacement_x);
+                    // ROS_INFO_STREAM("marker_center.x: " << marker_center.x);
+                    // ROS_INFO_STREAM("image_center.x: " << image_center.x);
+                    // ROS_INFO_STREAM("image.cols.x: " << image.cols);
+
+                    // This calculation assumes that the field of view (FOV) of the camera is known. 
+                    // FOV should be in radians.
+                    double fov_horizontal = 1.085595;  // Raspi camera
+                    // double angle_to_tag = atan2(displacement_x, image_center.x) * (fov_horizontal / 2) / (image.cols / 2);
+                    
+                    // double pixel_ratio = displacement_x / (image.cols / 2);
+                    // double angle_to_tag = pixel_ratio * (fov_horizontal / 2);
+                    double angle_to_tag = atan2(displacement_x, distance_to_marker);
+                    if (angle_to_tag < M_PI/18) angle_to_tag = 0;
+
+                    ROS_INFO_STREAM("angle_to_tag" << angle_to_tag);
+
+                    // Compute velocity commands
+                    double linear_velocity, angular_velocity;
+                    controller_.compute_velocity_commands(distance_to_marker, angle_to_tag, linear_velocity, angular_velocity);
+                    ROS_INFO_STREAM("angular_velocity" << angular_velocity);
+
+                    geometry_msgs::Twist cmd;
+                    cmd.linear.x = linear_velocity;
+                    cmd.angular.z = angular_velocity;
+                    cmd_vel_pub_.publish(cmd);
                 }
                 
                 // Draw axis for each marker
@@ -120,6 +170,7 @@ public:
         image_transport::ImageTransport it_;
         image_transport::Subscriber image_sub_;
         image_transport::Publisher image_pub_;
+        ros::Publisher cmd_vel_pub_;
         
         float markerLength_;
         cv::Mat cameraMatrix_;
@@ -128,6 +179,11 @@ public:
         cv::Ptr<cv::aruco::DetectorParameters> detectorParams_;
         cv::Ptr<cv::aruco::Dictionary> dictionary_;
 
+        static constexpr double DESIRED_DISTANCE = 0.2;
+        static constexpr double MAX_LINEAR_SPEED = 3;
+        static constexpr double MAX_ANGULAR_SPEED = 0.1;
+
+        SimpleController controller_;
 };
 
 
