@@ -14,21 +14,25 @@ class ArucoDetectorNode {
 public:
     ArucoDetectorNode() 
         : it_(nh_), 
-        markerLength_(0.05), 
+        markerLength_(0.2), 
         controller_(DESIRED_DISTANCE, MAX_LINEAR_SPEED, MAX_ANGULAR_SPEED){
 
         
         // Subscribe to the raw image topic
-        image_sub_ = it_.subscribe("/follower/camera/rgb/image_raw", 1, &ArucoDetectorNode::imageCallback, this);
-        
+        image_sub_ = it_.subscribe("/camera/color/image_raw", 1, &ArucoDetectorNode::imageCallback, this);
+        // image_sub_ = it_.subscribe("/follower/camera/rgb/image_raw", 1, &ArucoDetectorNode::imageCallback, this); // topic for simulated turtlebot
+              
         // Advertise the topic where the images with detected ArUco markers will be published
         image_pub_ = it_.advertise("camera/image_aruco_detected", 1);
-        cmd_vel_pub_ = nh_.advertise<geometry_msgs::Twist>("follower/cmd_vel", 10);
+        // cmd_vel_pub_ = nh_.advertise<geometry_msgs::Twist>("follower/cmd_vel", 10); // topic for simulated turtlebot
+        cmd_vel_pub_ = nh_.advertise<geometry_msgs::Twist>("/cmd_vel", 10);
+
 
         
         // Read camera parameters from tutorial_camera_params.yml
         std::string packagePath = ros::package::getPath("turtlebot_follows_turtlebot_navigation");
-        std::string cameraParamsRelativePath = "/config/turtlebot_gazebo_camera_params.yml"; // adjust path   
+        std::string cameraParamsRelativePath = "/config/realsense2_camera_params.yml"; // adjust path   
+        // std::string cameraParamsRelativePath = "/config/turtlebot_gazebo_camera_params.yml"; // adjust path to use simulated camera
 
         std::string cameraParamsFile = packagePath + cameraParamsRelativePath;
 
@@ -63,7 +67,8 @@ public:
 
         // ArUco dictionary and parameters
         detectorParams_ = cv::aruco::DetectorParameters::create();
-        dictionary_ = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_250);
+        dictionary_ = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_250);
+        // dictionary_ = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_250);
     }
 
 
@@ -81,9 +86,10 @@ public:
 
             cv::aruco::detectMarkers(image, dictionary_, corners, ids, detectorParams_);
             
+            ROS_INFO_STREAM("ids.size(): " << ids.size());
 
-            // If at least one marker detected
-            if (ids.size() == 1 && ids[0] == 24) {
+            // If at least one marker detected. id in this for sim robot is 24
+            if (ids.size() == 1 && ids[0] == 23) {
 
                 ROS_INFO("1");
 
@@ -121,13 +127,14 @@ public:
 
                     // This calculation assumes that the field of view (FOV) of the camera is known. 
                     // FOV should be in radians.
-                    double fov_horizontal = 1.085595;  // Raspi camera
+                    // double fov_horizontal = 1.085595;  // Simulated camera fov
+                    double fov_horizontal = 1.20428; // Realsense camera (69 x 42) of (H x V)
                     // double angle_to_tag = atan2(displacement_x, image_center.x) * (fov_horizontal / 2) / (image.cols / 2);
                     
                     // double pixel_ratio = displacement_x / (image.cols / 2);
                     // double angle_to_tag = pixel_ratio * (fov_horizontal / 2);
                     double angle_to_tag = atan2(displacement_x, distance_to_marker);
-                    if (angle_to_tag < M_PI/18) angle_to_tag = 0;
+                    if (abs(angle_to_tag) < M_PI/5) angle_to_tag = 0;
 
                     ROS_INFO_STREAM("angle_to_tag" << angle_to_tag);
 
@@ -179,9 +186,9 @@ public:
         cv::Ptr<cv::aruco::DetectorParameters> detectorParams_;
         cv::Ptr<cv::aruco::Dictionary> dictionary_;
 
-        static constexpr double DESIRED_DISTANCE = 0.2;
+        static constexpr double DESIRED_DISTANCE = 0.7;
         static constexpr double MAX_LINEAR_SPEED = 3;
-        static constexpr double MAX_ANGULAR_SPEED = 0.1;
+        static constexpr double MAX_ANGULAR_SPEED = 0.4;
 
         SimpleController controller_;
 };
