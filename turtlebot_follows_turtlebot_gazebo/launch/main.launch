@@ -6,10 +6,11 @@
   <arg name="laser_visual" default="false"/>
   <arg name="camera_visual" default="false"/>
   <arg name="imu_visual" default="false" />
-  <arg name="open_rviz" default="true" />
+  <arg name="open_rviz" default="false" />
 
 
   <include file="$(find gazebo_ros)/launch/empty_world.launch" >
+      <arg name="world_name" value="$(find turtlebot_follows_turtlebot_gazebo)/worlds/light.world"/>
       <arg name="paused" value="false"/>
       <arg name="use_sim_time" value="true"/>
       <arg name="gui" value="$(arg gui)"/>
