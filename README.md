@@ -1,6 +1,8 @@
 # turtlebot-follows-turtlebot
 A project for 41014 Sensor and Control for Mechatronic Systems
 
+![image](https://github.com/minhquanvu0604/turtlebot-follows-turtlebot/assets/59466039/346c5e43-9141-4cff-8444-1f0da7277615)
+
 
 ## Components
 `turtlebot_follows_turtlebot` : meta-package
